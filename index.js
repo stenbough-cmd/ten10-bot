@@ -16,14 +16,22 @@ client.once("ready", () => {
 // POST endpoint for standings
 app.post("/post", async (req, res) => {
   try {
-    const channel = await client.channels.fetch(process.env.CHANNEL_ID);
-    await channel.send(req.body.content || "No content received");
+    const { channel, content } = req.body;
+
+    if (!channel) {
+      return res.status(400).send("Missing 'channel' in request body");
+    }
+
+    const discordChannel = await client.channels.fetch(channel);
+    await discordChannel.send(content || "No content received");
+
     res.status(200).send("Message sent");
   } catch (err) {
     console.error(err);
     res.status(500).send("Error sending message");
   }
 });
+
 
 // REQUIRED: Cloud Run health check
 app.get("/", (req, res) => {
