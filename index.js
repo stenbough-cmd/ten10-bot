@@ -9,32 +9,32 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]
 });
 
-const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
-const CHANNEL_ID = process.env.CHANNEL_ID;
+client.once("ready", () => {
+  console.log("Discord bot is online");
+});
 
-client.login(DISCORD_TOKEN);
-
-// POST endpoint
+// POST endpoint for standings
 app.post("/post", async (req, res) => {
   try {
-    const channel = await client.channels.fetch(CHANNEL_ID);
-
-    const { content, embed } = req.body;
-
-    if (embed) {
-      await channel.send({ embeds: [embed] });
-    } else {
-      await channel.send(content || "No content received.");
-    }
-
-    res.json({ status: "ok" });
+    const channel = await client.channels.fetch(process.env.CHANNEL_ID);
+    await channel.send(req.body.content || "No content received");
+    res.status(200).send("Message sent");
   } catch (err) {
-    console.error("Error posting to Discord:", err);
-    res.status(500).json({ error: "Failed to post" });
+    console.error(err);
+    res.status(500).send("Error sending message");
   }
 });
 
-// Start server
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log("Bot is listening on port " + PORT));
+// REQUIRED: Cloud Run health check
+app.get("/", (req, res) => {
+  res.status(200).send("Ten10 bot is running");
 });
+
+// REQUIRED: Cloud Run port binding
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log("Server listening on port " + PORT);
+});
+
+// Login Discord bot
+client.login(process.env.DISCORD_TOKEN);
